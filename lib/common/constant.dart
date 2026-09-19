@@ -138,5 +138,125 @@ const main = (config) => {
   return config;
 }''';
 
+const defaultProfileScriptId = -2026091901;
+const defaultProfileScriptLabel = '懒猫微服共存规则';
+
+const defaultProfileScript = r'''
+function main(config) {
+  if (!config.sniffer) config.sniffer = {};
+
+  const snifferSkipDomains = ["+heiyu.space", "+lazycat.cloud"];
+  if (!Array.isArray(config.sniffer["skip-domain"])) {
+    config.sniffer["skip-domain"] = [];
+  }
+  for (const domain of snifferSkipDomains) {
+    if (!config.sniffer["skip-domain"].includes(domain)) {
+      config.sniffer["skip-domain"].push(domain);
+    }
+  }
+
+  const skipAddresses = [
+    "6.6.6.6/32",
+    "2000::6666/128",
+    "fc03:1136:3800::/40",
+    "10.0.0.0/8",
+    "172.16.0.0/12",
+    "169.254.0.0/16",
+    "192.168.0.0/16",
+    "127.0.0.0/8",
+    "fd00::/8",
+    "fe80::/10",
+    "::1/128",
+  ];
+  for (const key of ["skip-src-address", "skip-dst-address"]) {
+    if (!Array.isArray(config.sniffer[key])) config.sniffer[key] = [];
+    for (const address of skipAddresses) {
+      if (!config.sniffer[key].includes(address)) {
+        config.sniffer[key].push(address);
+      }
+    }
+  }
+
+  if (!config.tun) config.tun = {};
+  const tunExclude = [
+    "6.6.6.6/32",
+    "2000::6666/128",
+    "fc03:1136:3800::/40",
+    "127.0.0.0/8",
+    "192.168.0.0/16",
+    "10.0.0.0/8",
+    "172.16.0.0/12",
+    "169.254.0.0/16",
+    "224.0.0.0/4",
+    "fd00::/8",
+    "fe80::/10",
+    "::1/128",
+  ];
+  if (!Array.isArray(config.tun["route-exclude-address"])) {
+    config.tun["route-exclude-address"] = [];
+  }
+  for (const address of tunExclude) {
+    if (!config.tun["route-exclude-address"].includes(address)) {
+      config.tun["route-exclude-address"].push(address);
+    }
+  }
+
+  if (!config.dns) config.dns = {};
+  config.dns["fake-ip-filter-mode"] = "blacklist";
+  if (!Array.isArray(config.dns["fake-ip-filter"])) {
+    config.dns["fake-ip-filter"] = [];
+  }
+  for (const domain of ["+heiyu.space", "+lazycat.cloud"]) {
+    if (!config.dns["fake-ip-filter"].includes(domain)) {
+      config.dns["fake-ip-filter"].push(domain);
+    }
+  }
+
+  const proxyName = "懒猫微服";
+  const groupName = "懒猫微服策略";
+  const proxy = {
+    name: proxyName,
+    type: "http",
+    server: "127.0.0.1",
+    port: 31085,
+  };
+  if (!Array.isArray(config.proxies)) config.proxies = [];
+  const proxyIndex = config.proxies.findIndex((item) => item.name === proxyName);
+  if (proxyIndex === -1) {
+    config.proxies.push(proxy);
+  } else {
+    config.proxies[proxyIndex] = {...config.proxies[proxyIndex], ...proxy};
+  }
+
+  if (!Array.isArray(config["proxy-groups"])) config["proxy-groups"] = [];
+  const group = {name: groupName, type: "select", proxies: ["DIRECT", proxyName]};
+  const groupIndex = config["proxy-groups"].findIndex(
+    (item) => item.name === groupName,
+  );
+  if (groupIndex === -1) {
+    config["proxy-groups"].unshift(group);
+  } else {
+    const existing = config["proxy-groups"][groupIndex];
+    existing.type = "select";
+    if (!Array.isArray(existing.proxies)) existing.proxies = [];
+    for (const item of group.proxies) {
+      if (!existing.proxies.includes(item)) existing.proxies.push(item);
+    }
+  }
+
+  const rules = [
+    "PROCESS-NAME,懒猫微服,DIRECT",
+    "PROCESS-NAME,lzc-core.darwin,DIRECT",
+    "DOMAIN,appstore.api.lazycat.cloud,DIRECT",
+    "DOMAIN,dl.lazycat.cloud,DIRECT",
+    `DOMAIN-SUFFIX,heiyu.space,${groupName}`,
+    `DOMAIN-SUFFIX,lazycat.cloud,${groupName}`,
+  ];
+  if (!Array.isArray(config.rules)) config.rules = [];
+  config.rules = config.rules.filter((rule) => !rules.includes(rule));
+  config.rules = [...rules, ...config.rules];
+  return config;
+}''';
+
 const backupDatabaseName = 'database.sqlite';
 const configJsonName = 'config.json';

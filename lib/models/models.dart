@@ -5,4 +5,5 @@ export 'common.dart';
 export 'config.dart';
 export 'core.dart';
 export 'profile.dart';
+export 'profile_import_hook.dart';
 export 'state.dart';

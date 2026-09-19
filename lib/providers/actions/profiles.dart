@@ -7,6 +7,24 @@ class ProfilesAction extends _$ProfilesAction {
   @override
   void build() {}
 
+  Future<void> _ensureDefaultImportScript() async {
+    final existing = await database.scriptsDao
+        .get(defaultProfileScriptId)
+        .getSingleOrNull();
+    if (existing != null && await existing.content != null) {
+      return;
+    }
+    final script =
+        existing ??
+        Script(
+          id: defaultProfileScriptId,
+          label: defaultProfileScriptLabel,
+          lastUpdateTime: DateTime.now(),
+        );
+    await script.save(defaultProfileScript);
+    await database.scripts.put(script.toCompanion());
+  }
+
   void updateCurrentSelectedMap(String groupName, String proxyName) {
     final currentProfile = ref.read(currentProfileProvider);
     if (currentProfile != null &&
@@ -105,9 +123,11 @@ class ProfilesAction extends _$ProfilesAction {
     final profile = await globalState.loadingRun(
       tag: LoadingTag.profiles,
       () async {
-        return Profile.normal(
+        await _ensureDefaultImportScript();
+        final imported = await Profile.normal(
           label: platformFile.name,
         ).saveFile(bytes, validate: (path) => _core.validateConfig(path));
+        return applyDefaultProfileImportHook(imported);
       },
       title: currentAppLocalizations.addProfile,
     );
@@ -124,9 +144,11 @@ class ProfilesAction extends _$ProfilesAction {
     final profile = await globalState.loadingRun(
       tag: LoadingTag.profiles,
       () async {
-        return Profile.normal(
+        await _ensureDefaultImportScript();
+        final imported = await Profile.normal(
           url: url,
         ).update(validate: (path) => _core.validateConfig(path));
+        return applyDefaultProfileImportHook(imported);
       },
       title: currentAppLocalizations.addProfile,
     );
