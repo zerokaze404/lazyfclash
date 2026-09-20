@@ -2,6 +2,23 @@
   "schemaVersion": 2,
   "versions": [
     {
+      "version": "0.8.99",
+      "tag": "v0.8.99",
+      "date": "2026-09-20",
+      "prerelease": false,
+      "groups": [
+        {
+          "type": "feat",
+          "entries": [
+            {
+              "id": "df4427b",
+              "text": "Apply default import override rules"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "version": "0.8.98",
       "tag": "v0.8.98",
       "date": "2026-09-14",

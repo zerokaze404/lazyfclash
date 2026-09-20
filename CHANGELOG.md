@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.8.99 (2026-09-20)
+
+**Features**
+
+- Apply default import override rules (df4427b)
+
 ## v0.8.98 (2026-09-14)
 
 **Bug Fixes**
